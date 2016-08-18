@@ -2089,7 +2089,7 @@ public abstract class ODataClientTemplate : TemplateBase
             
             // The static create method only sets non-nullable properties. We should add the null check if the type of the property is not a clr ValueType.
             // For now we add the null check if the property type is non-primitive. We should add the null check for non-ValueType primitives in the future.
-            if (!property.Type.IsPrimitive() && !property.Type.IsEnum())
+            if (!property.Type.IsPrimitive() && !property.Type.IsEnum() && !property.Type.IsTypeDefinition())
             {
                 this.WriteParameterNullCheckForStaticCreateMethod(parameterName);
             }
