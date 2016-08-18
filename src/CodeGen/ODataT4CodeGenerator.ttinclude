@@ -1142,27 +1142,35 @@ public abstract class ODataClientTemplate : TemplateBase
             }
             else
             {
-                IEdmComplexType complexType = type as IEdmComplexType;
-                if (complexType != null)
+                IEdmTypeDefinition typeDefinition = type as IEdmTypeDefinition;
+                if (typeDefinition != null)
                 {
-                    this.WriteComplexType(complexType, boundOperationsMap);
+                    this.WriteTypeDefinition(typeDefinition);
                 }
                 else
                 {
-                    IEdmEntityType entityType = type as IEdmEntityType;
-                    this.WriteEntityType(entityType, boundOperationsMap);
-                }
-
-                IEdmStructuredType structuredType = type as IEdmStructuredType;
-                if (structuredType.BaseType != null)
-                {
-                    List<IEdmStructuredType> derivedTypes;
-                    if (!structuredBaseTypeMap.TryGetValue(structuredType.BaseType, out derivedTypes))
+                    IEdmComplexType complexType = type as IEdmComplexType;
+                    if (complexType != null)
                     {
-                       structuredBaseTypeMap[structuredType.BaseType] = new List<IEdmStructuredType>();
+                        this.WriteComplexType(complexType, boundOperationsMap);
                     }
-
-                    structuredBaseTypeMap[structuredType.BaseType].Add(structuredType);
+                    else
+                    {
+                        IEdmEntityType entityType = type as IEdmEntityType;
+                        this.WriteEntityType(entityType, boundOperationsMap);
+                    }
+    
+                    IEdmStructuredType structuredType = type as IEdmStructuredType;
+                    if (structuredType.BaseType != null)
+                    {
+                        List<IEdmStructuredType> derivedTypes;
+                        if (!structuredBaseTypeMap.TryGetValue(structuredType.BaseType, out derivedTypes))
+                        {
+                           structuredBaseTypeMap[structuredType.BaseType] = new List<IEdmStructuredType>();
+                        }
+    
+                        structuredBaseTypeMap[structuredType.BaseType].Add(structuredType);
+                    }
                 }
             }
         }
@@ -1817,6 +1825,11 @@ public abstract class ODataClientTemplate : TemplateBase
         this.WriteEnumDeclaration(this.context.EnableNamingAlias ? GetFixedName(Customization.CustomizeNaming(enumType.Name)) : GetFixedName(enumType.Name), enumType.Name, underlyingType);
         this.WriteMembersForEnumType(enumType.Members);
         this.WriteEnumEnd();
+    }
+    
+    internal void WriteTypeDefinition(IEdmTypeDefinition typeDefinition)
+    {
+        // For now do nothing; we'll map type definitions directly to their underlying type
     }
 
     internal void WriteStructurdTypeDeclaration(IEdmStructuredType structuredType, string baseEntityType, string typeNameSuffix = null)
@@ -2649,6 +2662,17 @@ internal static class Utils
         string clrTypeName;
         IEdmType edmType = edmTypeReference.Definition;
         IEdmPrimitiveType edmPrimitiveType = edmType as IEdmPrimitiveType;
+        
+        // Type definitions are mapped directly to the underlying primitive type
+        if (edmPrimitiveType == null)
+        {
+            IEdmTypeDefinition edmTypeDefinition = edmType as IEdmTypeDefinition;
+            if (edmTypeDefinition != null)
+            {
+                edmPrimitiveType = edmTypeDefinition.UnderlyingType;
+            }
+        }
+        
         if (edmPrimitiveType != null)
         {
             clrTypeName = Utils.GetClrTypeName(edmPrimitiveType, clientTemplate);
