@@ -113,12 +113,24 @@ namespace Microsoft.OData.Edm.Csdl.Serialization
 
             base.ProcessEntitySet(element);
 
+            this.ProcessNavigationPropertyBindings(element);
+
+            this.EndElement(element);
+        }
+        
+        private void ProcessNavigationPropertyBindings(IEdmNavigationSource navigationSource)
+        {
             foreach (IEdmNavigationPropertyBinding binding in element.NavigationPropertyBindings)
             {
                 this.schemaWriter.WriteNavigationPropertyBinding(element, binding);
             }
-
-            this.EndElement(element);
+            foreach (IEdmNavigationProperty property in navigationSource.EntityType().DeclaredNavigationProperties())
+            {
+                if (property.ContainsTarget)
+                {
+                    this.ProcessNavigationPropertyBindings(navigationSource.FindNavigationTarget(property));
+                }
+            }
         }
 
         protected override void ProcessSingleton(IEdmSingleton element)
