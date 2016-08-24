@@ -129,7 +129,7 @@ namespace Microsoft.OData.Edm.Csdl.Serialization
 
         internal void WriteNavigationPropertyBinding(IEdmNavigationSource navigationSource, IEdmNavigationPropertyBinding binding)
         {
-            this.WriteNavigationPropertyBinding(binding, navigationSource.EntityType());
+            this.WriteNavigationPropertyBinding(navigationSource.Path, binding, navigationSource.EntityType());
         }
 
         internal void WriteEntityTypeElementHeader(IEdmEntityType entityType)
@@ -706,15 +706,18 @@ namespace Microsoft.OData.Edm.Csdl.Serialization
             }
         }
 
-        private void WriteNavigationPropertyBinding(IEdmNavigationPropertyBinding binding, IEdmEntityType entityType)
+        private void WriteNavigationPropertyBinding(IEdmPathExpression sourcePath, IEdmNavigationPropertyBinding binding, IEdmEntityType entityType)
         {
             this.xmlWriter.WriteStartElement(CsdlConstants.Element_NavigationPropertyBinding);
 
-            string path = binding.NavigationProperty.Name;
+            List<string> pathParts = sourcePath.Skip(1).ToList();
             if (!entityType.IsOrInheritsFrom(binding.NavigationProperty.DeclaringType))
             {
-                path = binding.NavigationProperty.DeclaringEntityType().FullName() + '/' + path;
+                pathParts.Add(binding.NavigationProperty.DeclaringEntityType().FullName());
             }
+            pathParts.Add(binding.NavigationProperty.Name);
+            
+            string path = string.Join('/', pathParts);
 
             this.WriteRequiredAttribute(CsdlConstants.Attribute_Path, path, EdmValueWriter.StringAsXml);
 
