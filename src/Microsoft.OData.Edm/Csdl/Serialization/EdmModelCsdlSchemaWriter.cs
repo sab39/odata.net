@@ -710,7 +710,7 @@ namespace Microsoft.OData.Edm.Csdl.Serialization
         {
             this.xmlWriter.WriteStartElement(CsdlConstants.Element_NavigationPropertyBinding);
 
-            List<string> pathParts = sourcePath.Skip(1).ToList();
+            List<string> pathParts = sourcePath.Path.Skip(1).ToList();
             if (!entityType.IsOrInheritsFrom(binding.NavigationProperty.DeclaringType))
             {
                 pathParts.Add(binding.NavigationProperty.DeclaringEntityType().FullName());
